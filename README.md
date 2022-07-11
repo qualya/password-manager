@@ -5,6 +5,7 @@ Features:
 - Import private keys in either hexadecimal or words form
 - Generate passwords up to 64 hexadecimal characters long for any website
 - Access the same passwords on any device with no storage or internet required
+- Autotype generated passwords with ctrl+q
 
 Installation:
 - Clone the project
