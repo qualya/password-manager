@@ -16,6 +16,7 @@ else:
 
 
 running = True
+copying = True
 #create window for gui mode
 if mode == "gui":
     from tkinter import *
@@ -38,14 +39,16 @@ wordsList = list()
 with open("words.txt", "r") as wordsFile: #the BIP39 words list
     for word in wordsFile:
         wordsList.append(word.replace("\n", ""))
+    wordsFile.close()
 
 
 def background():
     global clipboard
     global running
+    global copying
     while running:
         try:
-            if keyboard.is_pressed("ctrl+q"): # <---------------------------------------------- add option to customize
+            if keyboard.is_pressed("ctrl+q") and copying:
                 keyboard.write(clipboard)
         except:
             pass
@@ -277,11 +280,11 @@ try:
         if choice == "2":
             notice.place(x=130, y=190)
         
-        websiteLabel = Label(window, text="Website Name: ", fg="black", font=("Courier", 10))
-        websiteLabel.place(x=20, y=230)
+        seedLabel = Label(window, text="Seed: ", fg="black", font=("Courier", 10))
+        seedLabel.place(x=80, y=230)
         
-        websitePrompt = Text(window, height=2, width=25)
-        websitePrompt.place(x=130, y=230)
+        seedPrompt = Text(window, height=2, width=25)
+        seedPrompt.place(x=130, y=230)
         
         truncateLabel = Label(window, text="Password Length: ", fg="black", font=("Courier", 10))
         truncateLabel.place(x=350, y=230)
@@ -295,10 +298,10 @@ try:
         
         inputted = False
         def generate():
-            global string
+            global seed
             global truncate
             global inputted
-            string = websitePrompt.get("1.0", "end-1c")
+            seed = seedPrompt.get("1.0", "end-1c")
             try:
                 truncate = int(truncatePrompt.get("1.0", "end-1c"))
             except:
@@ -308,6 +311,33 @@ try:
         generateButton = Button(window, font=("Courier", 10), text="Generate", height=5, width=10, command=generate)
         generateButton.place(x=20, y=280)
         
+        def getHelp():
+            top = Toplevel(window)
+            top.geometry("290x125")
+            top.title("Seed Info")
+            helpLabel = Label(top, text="Seeds can be usernames, website names,\ncombinations of those, or anything you want.\nFor simplicity, try to make your seeds memorable,\nand use a consistent pattern/format.\nExample seed format: 'username website_name'")
+            helpLabel.place(x=10, y=5)
+            okButton = Button(top, font=("Courier", 10), text="Okay", height=1, width=4, command=top.destroy)
+            okButton.place(x=130, y=90)
+        
+        helpButton = Button(window, font=("Courier", 10), text="?", height=1, width=2, command=getHelp)
+        helpButton.place(x=50, y=230)
+        
+        def toggleCtrlQ():
+            global copying
+            if copying == True:
+                copying = False
+                ctrlQOn.place_forget()
+                ctrlQOff.place(x=20, y=120)
+            elif copying == False:
+                copying = True
+                ctrlQOff.place_forget()
+                ctrlQOn.place(x=20, y=120)
+            
+        ctrlQOn = Button(window, font=("Courier", 10), text="Ctrl+Q:\nOn", height=2, width=10, command=toggleCtrlQ)
+        ctrlQOff = Button(window, font=("Courier", 10), text="Ctrl+Q:\nOff", height=2, width=10, command=toggleCtrlQ)
+        ctrlQOn.place(x=20, y=120)
+        
 
     if mode == "cmd":
         print("\n\nHex Key: " + hexKey)
@@ -315,7 +345,7 @@ try:
         if choice == "2":
             print("NOTE: make sure to either write down or memorize one of the forms of the private key above.")
         input("Press enter to continue.")
-        print("\n\nInput any website name to generate a password for below.")
+        print("\n\nInput any seed to generate a password for below. Seeds can be usernames, website names, combinations of those, or anything you want.")
 
 
     while running:
@@ -326,17 +356,17 @@ try:
             inputted = False
             
         if mode == "cmd":
-            string = input("\nWebsite: ")
+            seed = input("\nSeed: ")
             try:
                 truncate = int(input("Password Length: "))
             except:
                 truncate = 64
         
         
-        if string != "":
-            string = string + hexKey
+        if seed != "":
+            seed = seed + hexKey
             #hashing
-            bytesString = string.encode()
+            bytesString = seed.encode()
             encryptedHex = hashlib.sha256(bytesString).hexdigest()
             #truncation
             truncatedHex = encryptedHex[:truncate]
